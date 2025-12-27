@@ -43,47 +43,55 @@
     </section>
 
     <section class="panel">
-      <h2>Stops</h2>
-      <div id="list" class="list"></div>
 
-      <div id="detail" class="detail hidden">
-        <div class="detailHead">
-          <h3 id="dName"></h3>
-          <button id="closeDetail" class="ghost small">Close</button>
-        </div>
-        <p class="muted" id="dAddr"></p>
+  <!-- DETAIL FIRST -->
+  <div id="detail" class="detail hidden">
+    <div class="detailHead">
+      <h3 id="dName"></h3>
+      <button id="closeDetail" class="ghost small">Close</button>
+    </div>
+    <p class="muted" id="dAddr"></p>
 
-        <div class="box">
-          <h4>What we do here</h4>
-          <p id="dInstructions"></p>
-        </div>
+    <div class="box">
+      <h4>What we do here</h4>
+      <p id="dInstructions"></p>
+    </div>
 
-        <div class="box" id="challengeBox">
-          <h4>Challenge</h4>
-          <p id="dChallenge"></p>
-        </div>
-<div class="box">
-  <h4>Public posts</h4>
-  <div id="posts" class="posts"></div>
-<div class="box">
-  <h4>Photos & videos</h4>
-  <input id="mediaFile" type="file" accept="image/*,video/*" />
-  <input id="mediaCaption" placeholder="caption (optional)" />
-  <button id="uploadBtn" class="primary">Upload</button>
-  <div id="mediaGrid" class="mediaGrid"></div>
-</div>
-  <div class="postComposer">
-    <input id="username" placeholder="name (optional)" />
-    <input id="postMessage" placeholder="post a message…" />
-    <button id="postBtn" class="primary">Post</button>
-  </div>
-</div>
-        <div class="detailActions">
-          <button id="completeBtn" class="primary">Mark complete</button>
-          <a id="mapsLink" class="ghost link" target="_blank" rel="noreferrer">Open in Maps</a>
-        </div>
+    <div class="box" id="challengeBox">
+      <h4>Challenge</h4>
+      <p id="dChallenge"></p>
+    </div>
+
+    <div class="box">
+      <h4>Public posts</h4>
+      <div id="posts" class="posts"></div>
+
+      <div class="postComposer">
+        <input id="username" placeholder="name (optional)" />
+        <input id="postMessage" placeholder="post a message…" />
+        <button id="postBtn" class="primary">Post</button>
       </div>
-    </section>
+    </div>
+
+    <div class="box">
+      <h4>Photos & videos</h4>
+      <input id="mediaFile" type="file" accept="image/*,video/*" />
+      <input id="mediaCaption" placeholder="caption (optional)" />
+      <button id="uploadBtn" class="primary">Upload</button>
+      <div id="mediaGrid" class="mediaGrid"></div>
+    </div>
+
+    <div class="detailActions">
+      <button id="completeBtn" class="primary">Mark complete</button>
+      <a id="mapsLink" class="ghost link" target="_blank" rel="noreferrer">Open in Maps</a>
+    </div>
+  </div>
+
+  <!-- LIST SECOND -->
+  <h2>Stops</h2>
+  <div id="list" class="list"></div>
+
+</section>
   </main>
 </body>
 </html>
