@@ -65,7 +65,13 @@
 <div class="box">
   <h4>Public posts</h4>
   <div id="posts" class="posts"></div>
-
+<div class="box">
+  <h4>Photos & videos</h4>
+  <input id="mediaFile" type="file" accept="image/*,video/*" />
+  <input id="mediaCaption" placeholder="caption (optional)" />
+  <button id="uploadBtn" class="primary">Upload</button>
+  <div id="mediaGrid" class="mediaGrid"></div>
+</div>
   <div class="postComposer">
     <input id="username" placeholder="name (optional)" />
     <input id="postMessage" placeholder="post a message…" />
