@@ -314,6 +314,8 @@ async function init(){
       .bindPopup(`${completed.has(s.id) ? "✅" : "🎯"} ${s.name}`);
     marker.on("click", () => openDetail(s));
     markers.set(s.id, marker);
+    document.querySelectorAll(".bottomNav button").forEach(btn => {
+  btn.onclick = () => setTab(btn.dataset.tab);
   });
 
   fitRoute();
