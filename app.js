@@ -167,6 +167,14 @@ async function openDetail(stop){
   setCurrentStop(stop);
   await loadPostsForStop(stop.id);
   document.getElementById("postBtn").onclick = () => createPost(stop.id);
+
+  const img = document.getElementById("dPhoto");
+  if (stop.imageName) {
+  img.src = `./photos/${stop.imageName}.jpg`; // change to .png if needed
+  img.classList.remove("hidden");
+} else {
+  img.classList.add("hidden");
+}
   
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
