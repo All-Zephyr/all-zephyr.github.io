@@ -22,6 +22,30 @@ function save() {
   renderList();
   renderMarkerStyles();
 }
+async function setFeedStop(stop){
+  currentStopForFeedId = stop?.id || null;
+
+  const title = document.getElementById("feedTitle");
+  const sub = document.getElementById("feedSubtitle");
+
+  if (!currentStopForFeedId){
+    title.textContent = "Feed";
+    sub.textContent = "Start the crawl to pick a stop.";
+    document.getElementById("posts").innerHTML = "";
+    document.getElementById("mediaGrid").innerHTML = "";
+    return;
+  }
+
+  title.textContent = `Feed · ${stop.name}`;
+  sub.textContent = stop.address;
+
+  await loadPostsForStop(currentStopForFeedId);
+  await loadMediaForStop(currentStopForFeedId);
+
+  // Ensure buttons post/upload to the current stop
+  document.getElementById("postBtn").onclick = () => createPost(currentStopForFeedId);
+  document.getElementById("uploadBtn").onclick = () => uploadMedia(currentStopForFeedId);
+}
 
 async function uploadMedia(stopId){
   const fileInput = document.getElementById("mediaFile");
