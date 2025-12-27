@@ -44,6 +44,7 @@ function firstIncompleteStop(){
 }
 
 function openDetail(stop){
+  setCurrentStop(stop);
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
 
@@ -114,6 +115,7 @@ function fitRoute(){
 }
 
 async function init(){
+  renderCurrentStop();
   const res = await fetch("/spatis.json");
   stops = await res.json();
 
@@ -135,9 +137,11 @@ async function init(){
   renderProgress();
   renderList();
 
-  document.getElementById("startBtn").onclick = () => openDetail(firstIncompleteStop());
-  document.getElementById("resetBtn").onclick = () => { completed = new Set(); save(); };
-  document.getElementById("closeDetail").onclick = () => document.getElementById("detail").classList.add("hidden");
+document.getElementById("startBtn").onclick = () => {
+  const s = firstIncompleteStop();
+  setCurrentStop(s);
+  openDetail(s);
+};
 
   // auto-save render
   save();
