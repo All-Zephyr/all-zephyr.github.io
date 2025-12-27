@@ -1,4 +1,6 @@
 const LS_KEY = "spatiCrawlCompleted_v1";
+const LS_CURRENT_KEY = "spatiCrawlCurrentStop_v1";
+let currentStopId = localStorage.getItem(LS_CURRENT_KEY) || null;
 
 let stops = [];
 let completed = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]"));
@@ -13,7 +15,25 @@ function save() {
   renderList();
   renderMarkerStyles();
 }
+function setCurrentStop(stop){
+  currentStopId = stop?.id || null;
+  if (currentStopId) localStorage.setItem(LS_CURRENT_KEY, currentStopId);
+  else localStorage.removeItem(LS_CURRENT_KEY);
+  renderCurrentStop();
+}
 
+function renderCurrentStop(){
+  const el = document.getElementById("currentStop");
+  if (!stops.length) { el.textContent = "Loading…"; return; }
+
+  const stop = currentStopId ? stops.find(s => s.id === currentStopId) : null;
+  if (!stop) {
+    el.innerHTML = `Not started yet`;
+    return;
+  }
+
+  el.innerHTML = `Now at: <strong>${stop.name}</strong> · ${stop.address}`;
+}
 function renderProgress(){
   const el = document.getElementById("progress");
   el.textContent = `${completed.size} / ${stops.length} completed`;
