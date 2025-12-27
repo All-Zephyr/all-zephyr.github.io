@@ -1,0 +1,122 @@
+[
+  {
+    "id": "spati-01",
+    "name": "Heimgetränke",
+    "address": "Alte Schönhauser Str. 4",
+    "lat": 52.52784,
+    "lon": 13.40872,
+    "instructions": "Everyone buys a mini beer. Take a group selfie.",
+    "challenge": "",
+    "imageName": "spati1"
+  },
+  {
+    "id": "spati-02",
+    "name": "Postspäti",
+    "address": "Tor Str. 98",
+    "lat": 52.5296234,
+    "lon": 13.4042336,
+    "instructions": "Buy a Club Mate. Toast to the next stop.",
+    "challenge": "Most festive outfit wins a point.",
+    "imageName": "spati2"
+  },
+    {
+      "id": "spati-03",
+      "name": "Rosenthaler Späti",
+      "address": "Weinbergsweg 27",
+      "lat": 52.5302812,
+      "lon": 13.4016925,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+      },
+    {
+      "id": "spati-04",
+      "name": "SODA Späti",
+      "address": "Kastanienallee 60",
+      "lat": 52.5340442,
+      "lon": 13.4053357,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    },
+    {
+      "id": "spati-05",
+      "name": "La Bodega",
+      "address": "Schweder Str. 17",
+      "lat": 52.5341355,
+      "lon": 13.4086743,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    },
+    {
+      "id": "spati-06",
+      "name": "Ehrenspäti",
+      "address": "Schweder Str. 24",
+      "lat": 52.5350017,
+      "lon": 13.4072353,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    },
+    {
+      "id": "spati-07",
+      "name": "Ebersspäti",
+      "address": "Kastanienallee 5",
+      "lat": 52.5401028,
+      "lon": 13.4111594,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    },
+    {
+      "id": "spati-08",
+      "name": "MeGo Adar",
+      "address": "Knaackstr. / Danziger Str.",
+      "lat": 52.5403000,
+      "lon": 13.4145014,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    },
+    {
+      "id": "spati-09",
+      "name": "We Love Späti",
+      "address": " Danziger Str. 44",
+      "lat": 52.5398450,
+      "lon": 13.4193881,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    },
+    {
+      "id": "spati-10",
+      "name": "Arin Späti",
+      "address": " Prenzlauer Allee 199",
+      "lat": 52.5384237,
+      "lon": 13.4234932,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    },
+    {
+      "id": "spati-11",
+      "name": "Goldeck Kiosk",
+      "address": " Danziger Str. 76",
+      "lat": 52.5388238,
+      "lon": 13.4244585,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    },
+    {
+      "id": "spati-12",
+      "name": "DOENERLADE",
+      "address": " Prenzlauer Allee 197",
+      "lat": 52.5392720,
+      "lon": 13.4242258,
+      "instructions": "Buy a Club Mate. Toast to the next stop.",
+      "challenge": "Most festive outfit wins a point.",
+      "imageName": "spati2"
+    }
+]
