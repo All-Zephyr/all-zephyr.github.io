@@ -20,6 +20,71 @@ function save() {
   renderList();
   renderMarkerStyles();
 }
+
+async function uploadMedia(stopId){
+  const fileInput = document.getElementById("mediaFile");
+  const file = fileInput.files?.[0];
+  if (!file) return;
+
+  const username = (document.getElementById("username")?.value || "").trim();
+  const caption = (document.getElementById("mediaCaption")?.value || "").trim();
+
+  const isVideo = file.type.startsWith("video/");
+  const mediaType = isVideo ? "video" : "image";
+
+  const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
+  const path = `${stopId}/${crypto.randomUUID()}.${ext}`;
+
+  // Upload to Storage
+  const { error: upErr } = await sb.storage.from("media").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type
+  });
+  if (upErr) { console.error(upErr); alert("Upload failed"); return; }
+
+  // Get a public URL
+  const { data } = sb.storage.from("media").getPublicUrl(path);
+  const mediaUrl = data.publicUrl;
+
+  // Save metadata to DB
+  const { error: insErr } = await sb.from("media_posts").insert({
+    stop_id: stopId,
+    username,
+    caption,
+    media_url: mediaUrl,
+    media_type: mediaType
+  });
+  if (insErr) { console.error(insErr); alert("Save failed"); return; }
+
+  fileInput.value = "";
+  document.getElementById("mediaCaption").value = "";
+  await loadMediaForStop(stopId);
+}
+
+async function loadMediaForStop(stopId){
+  const { data, error } = await sb
+    .from("media_posts")
+    .select("*")
+    .eq("stop_id", stopId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) { console.error(error); return; }
+
+  const grid = document.getElementById("mediaGrid");
+  grid.innerHTML = "";
+  data.forEach(item => {
+    const wrap = document.createElement("div");
+    if (item.media_type === "video") {
+      wrap.innerHTML = `<video controls playsinline src="${item.media_url}"></video>`;
+    } else {
+      wrap.innerHTML = `<img loading="lazy" src="${item.media_url}" alt="">`;
+    }
+    grid.appendChild(wrap);
+  });
+}
+
 async function loadPostsForStop(stopId){
   const { data, error } = await sb
     .from("posts")
