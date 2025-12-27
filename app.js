@@ -175,6 +175,8 @@ async function openDetail(stop){
 const uploadBtn = document.getElementById("uploadBtn");
 if (uploadBtn) {
   uploadBtn.onclick = () => uploadMedia(stop.id);
+  document.getElementById("detail")
+  .scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
   document.getElementById("dName").textContent = stop.name;
