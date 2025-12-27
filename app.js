@@ -5,6 +5,7 @@ let currentStopId = localStorage.getItem(LS_CURRENT_KEY) || null;
 const SUPABASE_URL = "https://exvhwgkhgogeiqhwlvxz.supabase.co";
 const SUPABASE_ANON_KEY = "exvhwgkhgogeiqhwlvxz";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+console.log("Supabase connected:", sb);
 
 let stops = [];
 let completed = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]"));
