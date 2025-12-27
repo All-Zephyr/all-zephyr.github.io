@@ -22,6 +22,22 @@ function save() {
   renderList();
   renderMarkerStyles();
 }
+
+function setTab(name){
+  document.querySelectorAll(".tabPane").forEach(p => p.classList.remove("active"));
+  const pane = document.getElementById("tab" + name);
+  if (pane) pane.classList.add("active");
+
+  document.querySelectorAll(".bottomNav button").forEach(b => b.classList.remove("active"));
+  const btn = document.querySelector(`.bottomNav button[data-tab="${name}"]`);
+  if (btn) btn.classList.add("active");
+
+  // Leaflet map needs this after being hidden/shown
+  if (name === "Map" && typeof map !== "undefined" && map) {
+    setTimeout(() => map.invalidateSize(), 50);
+  }
+}
+
 async function setFeedStop(stop){
   currentStopForFeedId = stop?.id || null;
 
