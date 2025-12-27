@@ -19,6 +19,56 @@ function save() {
   renderList();
   renderMarkerStyles();
 }
+async function loadPostsForStop(stopId){
+  const { data, error } = await sb
+    .from("posts")
+    .select("*")
+    .eq("stop_id", stopId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) { console.error(error); return; }
+
+  const wrap = document.getElementById("posts");
+  wrap.innerHTML = "";
+  data.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "post";
+    const who = p.username?.trim() ? p.username.trim() : "anonymous";
+    const when = new Date(p.created_at).toLocaleString();
+    div.innerHTML = `
+      <div class="postMeta">${who} · ${when}</div>
+      <div>${escapeHtml(p.message)}</div>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+async function createPost(stopId){
+  const username = document.getElementById("username").value || "";
+  const message = document.getElementById("postMessage").value || "";
+  if (!message.trim()) return;
+
+  const { error } = await sb.from("posts").insert({
+    stop_id: stopId,
+    username,
+    message: message.trim()
+  });
+
+  if (error) { console.error(error); return; }
+
+  document.getElementById("postMessage").value = "";
+  await loadPostsForStop(stopId);
+}
+
+function escapeHtml(s){
+  return s
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 function setCurrentStop(stop){
   currentStopId = stop?.id || null;
   if (currentStopId) localStorage.setItem(LS_CURRENT_KEY, currentStopId);
