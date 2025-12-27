@@ -193,6 +193,8 @@ async function openDetail(stop){
   setCurrentStop(stop);
   await loadPostsForStop(stop.id);
   document.getElementById("postBtn").onclick = () => createPost(stop.id);
+  setTab("Map");
+  await setFeedStop(stop);
 
   const img = document.getElementById("dPhoto");
   if (stop.imageName) {
@@ -306,6 +308,7 @@ document.getElementById("startBtn").onclick = () => {
   const s = firstIncompleteStop();
   setCurrentStop(s);
   openDetail(s);
+  setTab("Map");
 };
 
   // auto-save render
