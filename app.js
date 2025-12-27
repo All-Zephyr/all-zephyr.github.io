@@ -2,8 +2,8 @@ const LS_KEY = "spatiCrawlCompleted_v1";
 const LS_CURRENT_KEY = "spatiCrawlCurrentStop_v1";
 let currentStopId = localStorage.getItem(LS_CURRENT_KEY) || null;
 
-const SUPABASE_URL = "https://YOURPROJECT.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+const SUPABASE_URL = "https://exvhwgkhgogeiqhwlvxz.supabase.co";
+const SUPABASE_ANON_KEY = "exvhwgkhgogeiqhwlvxz";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let stops = [];
