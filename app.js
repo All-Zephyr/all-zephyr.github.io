@@ -136,8 +136,6 @@ function escapeHtml(s){
     .replaceAll("'","&#039;");
 }
 function setCurrentStop(stop){
-  await loadMediaForStop(stop.id);
-document.getElementById("uploadBtn").onclick = () => uploadMedia(stop.id);
   currentStopId = stop?.id || null;
   if (currentStopId) localStorage.setItem(LS_CURRENT_KEY, currentStopId);
   else localStorage.removeItem(LS_CURRENT_KEY);
@@ -169,8 +167,15 @@ async function openDetail(stop){
   setCurrentStop(stop);
   await loadPostsForStop(stop.id);
   document.getElementById("postBtn").onclick = () => createPost(stop.id);
+  
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
+  await loadMediaForStop(stop.id);
+
+const uploadBtn = document.getElementById("uploadBtn");
+if (uploadBtn) {
+  uploadBtn.onclick = () => uploadMedia(stop.id);
+}
 
   document.getElementById("dName").textContent = stop.name;
   document.getElementById("dAddr").textContent = stop.address;
@@ -240,7 +245,7 @@ function fitRoute(){
 
 async function init(){
   renderCurrentStop();
-  const res = await fetch("/spatis.json");
+  const res = await fetch("./spatis.json");
   stops = await res.json();
 
   map = L.map("map");
