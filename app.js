@@ -97,8 +97,10 @@ function firstIncompleteStop(){
   return stops.find(s => !completed.has(s.id)) || stops[0];
 }
 
-function openDetail(stop){
+async function openDetail(stop){
   setCurrentStop(stop);
+  await loadPostsForStop(stop.id);
+  document.getElementById("postBtn").onclick = () => createPost(stop.id);
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
 
