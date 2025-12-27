@@ -136,6 +136,8 @@ function escapeHtml(s){
     .replaceAll("'","&#039;");
 }
 function setCurrentStop(stop){
+  await loadMediaForStop(stop.id);
+document.getElementById("uploadBtn").onclick = () => uploadMedia(stop.id);
   currentStopId = stop?.id || null;
   if (currentStopId) localStorage.setItem(LS_CURRENT_KEY, currentStopId);
   else localStorage.removeItem(LS_CURRENT_KEY);
