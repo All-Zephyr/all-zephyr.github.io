@@ -1,11 +1,70 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>All Zephyr</title>
-  </head>
-  <body>
-    <h1>Welcome to allzephyr!</h1>
-    <p>This site is hosted for free on GitHub Pages.</p>
-  </body>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>12 Spätis of Christmas</title>
+
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#b30000" />
+  <link rel="icon" href="/icons/icon-192.png" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="/styles.css" />
+  <script defer src="/app.js"></script>
+</head>
+
+<body>
+  <header class="header">
+    <div class="title">
+      <div class="emoji">🎄🍻</div>
+      <div>
+        <h1>12 Spätis of Christmas</h1>
+        <p id="progress">Loading…</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="startBtn" class="primary">Start / Continue</button>
+      <button id="resetBtn" class="ghost">Reset</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="mapWrap">
+      <div id="map"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Stops</h2>
+      <div id="list" class="list"></div>
+
+      <div id="detail" class="detail hidden">
+        <div class="detailHead">
+          <h3 id="dName"></h3>
+          <button id="closeDetail" class="ghost small">Close</button>
+        </div>
+        <p class="muted" id="dAddr"></p>
+
+        <div class="box">
+          <h4>What we do here</h4>
+          <p id="dInstructions"></p>
+        </div>
+
+        <div class="box" id="challengeBox">
+          <h4>Challenge</h4>
+          <p id="dChallenge"></p>
+        </div>
+
+        <div class="detailActions">
+          <button id="completeBtn" class="primary">Mark complete</button>
+          <a id="mapsLink" class="ghost link" target="_blank" rel="noreferrer">Open in Maps</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
 </html>
