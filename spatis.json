@@ -5,8 +5,8 @@
     "address": "Alte Schönhauser Str. 4",
     "lat": 52.52784,
     "lon": 13.40872,
-    "instructions": "Everyone buys a mini beer. Take a group selfie.",
-    "challenge": "",
+    "instructions": "drink your drink with the hand you don´t use.",
+    "Remember!": "Now is a good time to get some cash out and buy your punish drink",
     "imageName": "spati1"
   },
   {
@@ -15,8 +15,7 @@
     "address": "Tor Str. 98",
     "lat": 52.5296234,
     "lon": 13.4042336,
-    "instructions": "Buy a Club Mate. Toast to the next stop.",
-    "challenge": "Most festive outfit wins a point.",
+    "instructions": "no names or nicknames are allowed - that includes Levitova, Strasser, and any other last names",
     "imageName": "spati2"
   },
     {
@@ -25,9 +24,9 @@
       "address": "Weinbergsweg 27",
       "lat": 52.5302812,
       "lon": 13.4016925,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "lock in for Bierball",
+      "Try to remember": "Werfflasche",
+      "imageName": "spati3"
       },
     {
       "id": "spati-04",
@@ -35,9 +34,8 @@
       "address": "Kastanienallee 60",
       "lat": 52.5340442,
       "lon": 13.4053357,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "Don’t speak English or German and practice another!",
+      "imageName": "spati4"
     },
     {
       "id": "spati-05",
@@ -45,9 +43,8 @@
       "address": "Schweder Str. 17",
       "lat": 52.5341355,
       "lon": 13.4086743,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "the last one here sings a Christmas song chosen by the rest of the group",
+      "imageName": "spati5"
     },
     {
       "id": "spati-06",
@@ -55,9 +52,8 @@
       "address": "Schweder Str. 24",
       "lat": 52.5350017,
       "lon": 13.4072353,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "drink your entire drink from someone else’s hand",
+      "imageName": "spati6"
     },
     {
       "id": "spati-07",
@@ -65,9 +61,8 @@
       "address": "Kastanienallee 5",
       "lat": 52.5401028,
       "lon": 13.4111594,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "no toilets breaks",
+      "imageName": "spati7"
     },
     {
       "id": "spati-08",
@@ -75,9 +70,8 @@
       "address": "Knaackstr. / Danziger Str.",
       "lat": 52.5403000,
       "lon": 13.4145014,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "Take a photo with a stranger - you can upload photos and videos here!",
+      "imageName": "spati8"
     },
     {
       "id": "spati-09",
@@ -85,9 +79,8 @@
       "address": " Danziger Str. 44",
       "lat": 52.5398450,
       "lon": 13.4193881,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "Congratulations! You're almost done. Take a shot to celebrate",
+      "imageName": "spati9"
     },
     {
       "id": "spati-10",
@@ -95,9 +88,8 @@
       "address": " Prenzlauer Allee 199",
       "lat": 52.5384237,
       "lon": 13.4234932,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "do not use your phones",
+      "imageName": "spati10"
     },
     {
       "id": "spati-11",
@@ -105,9 +97,9 @@
       "address": " Danziger Str. 76",
       "lat": 52.5388238,
       "lon": 13.4244585,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "congratulations! you've made it to the last actual späti, consider getting one more to do the official 12 pints",
+      "challenge": "compliment everyone you speak to",
+      "imageName": "spati11"
     },
     {
       "id": "spati-12",
@@ -115,8 +107,7 @@
       "address": " Prenzlauer Allee 197",
       "lat": 52.5392720,
       "lon": 13.4242258,
-      "instructions": "Buy a Club Mate. Toast to the next stop.",
-      "challenge": "Most festive outfit wins a point.",
-      "imageName": "spati2"
+      "instructions": "You've made it! Congratulations! ",
+      "imageName": "spati12"
     }
 ]
