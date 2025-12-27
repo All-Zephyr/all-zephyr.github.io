@@ -6,7 +6,13 @@
   --accent:#b30000;
   --accent2:#0a7a2a;
 }
-
+.currentStop{
+  margin:6px 0 0;
+  font-size:13px;
+  color: var(--text);
+  opacity: .9;
+}
+.currentStop strong{ color: #fff; }
 *{box-sizing:border-box}
 body{
   margin:0;
