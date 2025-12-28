@@ -279,6 +279,11 @@ if (uploadBtn) {
   markers.get(stop.id)?.openPopup();
 }
 
+function closeDetail(){
+  const detail = document.getElementById("detail");
+  if (detail) detail.classList.add("hidden");
+}
+
 function renderList(){
   const list = document.getElementById("list");
   list.innerHTML = "";
@@ -631,6 +636,7 @@ async function init(){
     openDetail(s);
     setTab("Map");
   };
+  document.getElementById("closeDetail").onclick = closeDetail;
 
   // auto-save render
   save();
