@@ -121,7 +121,13 @@ button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
 .post{padding:10px; border-radius:14px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08)}
 .postMeta{font-size:12px; color:var(--muted); margin-bottom:4px}
 
-.postComposer{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+.postComposer{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
 .postComposer input{
   flex: 1 1 160px;
   padding:10px 12px;

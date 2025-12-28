@@ -83,6 +83,15 @@ async function setFeedStop(stop){
 
   // Ensure buttons post/upload to the current stop
   document.getElementById("postBtn").onclick = () => createPost(currentStopForFeedId);
+  const postInput = document.getElementById("postMessage");
+  if (postInput){
+    postInput.onkeydown = (e) => {
+      if (e.key === "Enter"){
+        e.preventDefault();
+        createPost(currentStopForFeedId);
+      }
+    };
+  }
   document.getElementById("uploadBtn").onclick = () => uploadMedia(currentStopForFeedId);
 }
 
@@ -201,7 +210,8 @@ async function loadPostsForStop(stopId){
 
 async function createPost(stopId){
   const username = document.getElementById("username").value || getLiveName() || "";
-  const message = document.getElementById("postMessage").value || "";
+  const input = document.getElementById("postMessage");
+  const message = input?.value || "";
   if (!message.trim()) return;
 
   const { error } = await sb.from("posts").insert({
@@ -212,7 +222,7 @@ async function createPost(stopId){
 
   if (error) { console.error(error); return; }
 
-  document.getElementById("postMessage").value = "";
+  if (input) input.value = "";
   await loadPostsForStop(stopId);
 }
 
@@ -771,10 +781,13 @@ async function init(){
   renderProgress();
   renderList();
 
-  if (!currentStopId && stops.length){
-    const s = firstIncompleteStop();
-    setCurrentStop(s);
-    setFeedStop(s);
+  if (stops.length){
+    const stored = currentStopId ? stops.find(s => s.id === currentStopId) : null;
+    const s = stored || firstIncompleteStop();
+    if (s){
+      setCurrentStop(s);
+      setFeedStop(s);
+    }
   }
   document.getElementById("closeDetail").onclick = closeDetail;
 
