@@ -325,17 +325,16 @@ async function init(){
 
   // Optional: start on Map
   setTab("Map");
-}
   fitRoute();
   renderProgress();
   renderList();
 
-document.getElementById("startBtn").onclick = () => {
-  const s = firstIncompleteStop();
-  setCurrentStop(s);
-  openDetail(s);
-  setTab("Map");
-};
+  document.getElementById("startBtn").onclick = () => {
+    const s = firstIncompleteStop();
+    setCurrentStop(s);
+    openDetail(s);
+    setTab("Map");
+  };
 
   // auto-save render
   save();
