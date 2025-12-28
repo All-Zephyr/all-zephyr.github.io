@@ -7,6 +7,8 @@ const LIVE_NAME_KEY = "liveLocationName_v1";
 const LIVE_AVATAR_KEY = "liveLocationAvatar_v1";
 const LIVE_ONBOARD_KEY = "liveOnboardComplete_v1";
 const LIVE_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+// Requires table: client_logs (level text, message text, extra jsonb, url text, user_agent text, username text, stop_id text, created_at timestamptz).
+const LOG_TABLE = "client_logs";
 let currentStopId = localStorage.getItem(LS_CURRENT_KEY) || null;
 
 let currentStopForFeedId = null;
@@ -37,6 +39,9 @@ let commentsChannel;
 let feedCache = [];
 let isPosting = false;
 let commentsByKey = new Map();
+let logQueue = [];
+let logFlushTimer = null;
+let isFlushingLogs = false;
 
 function save() {
   localStorage.setItem(LS_KEY, JSON.stringify([...completed]));
@@ -836,6 +841,10 @@ function startLiveSharing(){
       (err) => {
         console.error(err);
         setLiveStatus("Location error. Check permissions.");
+        if (liveWatchId !== null){
+          navigator.geolocation.clearWatch(liveWatchId);
+          liveWatchId = null;
+        }
         reject(err);
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
@@ -960,6 +969,94 @@ function setCommitRef(){
   if (el) el.textContent = `Commit: ${COMMIT_REF}`;
 }
 
+function setupClientLogging(){
+  const MAX_QUEUE = 20;
+  const FLUSH_INTERVAL_MS = 5000;
+  const MAX_PER_MIN = 20;
+  let sentInWindow = 0;
+  let windowStart = Date.now();
+
+  const resetWindowIfNeeded = () => {
+    const now = Date.now();
+    if (now - windowStart > 60000){
+      windowStart = now;
+      sentInWindow = 0;
+    }
+  };
+
+  const enqueue = (level, message, extra) => {
+    resetWindowIfNeeded();
+    if (sentInWindow >= MAX_PER_MIN) return;
+    if (isFlushingLogs) return;
+    const username = getLiveName() || null;
+    logQueue.push({
+      level,
+      message,
+      extra,
+      url: window.location.href,
+      user_agent: navigator.userAgent,
+      username,
+      stop_id: currentStopId || null,
+      created_at: new Date().toISOString()
+    });
+    if (logQueue.length > MAX_QUEUE) logQueue.shift();
+    if (!logFlushTimer){
+      logFlushTimer = setTimeout(flushLogs, FLUSH_INTERVAL_MS);
+    }
+  };
+
+  const flushLogs = async () => {
+    if (!logQueue.length) return;
+    if (isFlushingLogs) return;
+    isFlushingLogs = true;
+    const batch = logQueue.splice(0, logQueue.length);
+    resetWindowIfNeeded();
+    sentInWindow += batch.length;
+    try {
+      await sb.from(LOG_TABLE).insert(batch);
+    } catch (err) {
+      console.warn("Log flush failed", err);
+    } finally {
+      isFlushingLogs = false;
+      logFlushTimer = null;
+    }
+  };
+
+  window.addEventListener("error", (event) => {
+    const msg = event.message || "window.error";
+    enqueue("error", msg, {
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+      stack: event.error?.stack
+    });
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason;
+    const msg = typeof reason === "string" ? reason : (reason?.message || "unhandledrejection");
+    enqueue("error", msg, {
+      stack: reason?.stack
+    });
+  });
+
+  const origWarn = console.warn;
+  console.warn = (...args) => {
+    try {
+      enqueue("warn", args.map(a => String(a)).join(" "), null);
+    } catch {}
+    origWarn.apply(console, args);
+  };
+
+  const origError = console.error;
+  console.error = (...args) => {
+    try {
+      enqueue("error", args.map(a => String(a)).join(" "), null);
+    } catch {}
+    origError.apply(console, args);
+  };
+}
+
 function fitRoute(){
   const latlngs = stops.map(s => [s.lat, s.lon]);
   routeLine?.remove();
@@ -997,6 +1094,7 @@ async function init(){
   initLive();
   setupOnboarding();
   setCommitRef();
+  setupClientLogging();
 
   // Optional: start on Map
   setTab("Map");
