@@ -159,7 +159,7 @@ button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
   justify-content:center;
   padding:18px;
   background:rgba(0,0,0,.6);
-  z-index:20;
+  z-index:5000;
 }
 .modalCard{
   width:min(420px, 92vw);
@@ -175,3 +175,5 @@ button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
   flex-wrap:wrap;
   margin-top:12px;
 }
+
+.modalOpen{overflow:hidden;}

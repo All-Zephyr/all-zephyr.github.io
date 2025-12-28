@@ -546,9 +546,13 @@ function setupInstallPrompt(){
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   let deferredPrompt;
 
-  const showModal = () => modal.classList.remove("hidden");
+  const showModal = () => {
+    modal.classList.remove("hidden");
+    document.body.classList.add("modalOpen");
+  };
   const hideModal = () => {
     modal.classList.add("hidden");
+    document.body.classList.remove("modalOpen");
     localStorage.setItem(INSTALL_PROMPT_KEY, "true");
   };
 
