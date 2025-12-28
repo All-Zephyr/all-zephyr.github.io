@@ -32,7 +32,6 @@
     </div>
 
     <div class="actions">
-      <button id="startBtn" class="primary">Start / Continue</button>
       <button id="resetBtn" class="ghost">Reset</button>
     </div>
   </header>
@@ -79,7 +78,7 @@
     <section id="tabFeed" class="tabPane">
       <div class="panel">
         <h2 id="feedTitle">Feed</h2>
-        <p class="muted" id="feedSubtitle">Open a stop (or press Start) to post there.</p>
+        <p class="muted" id="feedSubtitle">Open a stop to post there.</p>
 
         <div class="box">
           <h4>Messages</h4>
@@ -109,13 +108,8 @@
         <div class="box">
           <p class="muted" id="liveStatus">Not sharing yet.</p>
           <div class="liveControls">
-            <input id="liveName" placeholder="name (optional)" />
-            <button id="liveShareBtn" class="primary">Start sharing</button>
-            <button id="liveStopBtn" class="ghost" disabled>Stop</button>
-          </div>
-          <div class="liveControls">
             <input id="liveAvatarFile" type="file" accept="image/*" capture="user" />
-            <button id="liveAvatarBtn" class="ghost">Upload avatar</button>
+            <button id="liveAvatarBtn" class="ghost">Update avatar</button>
           </div>
           <p class="muted small">Shares while this tab is open and active.</p>
           <p class="muted small">We only show the last 2 hours of locations.</p>
@@ -140,16 +134,20 @@
 
   <div id="commitRef" class="commitRef">Commit: loading…</div>
 
-  <div id="installPrompt" class="modal hidden" role="dialog" aria-modal="true">
+  <div id="onboardModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modalCard">
-      <h3>Add this to your home screen</h3>
-      <p class="muted">Install the Späti crawl as an app for a full-screen experience.</p>
-      <div id="installIos" class="hidden">
-        <p class="muted">On iPhone: tap the Share icon, then “Add to Home Screen”.</p>
+      <h3>Join the crawl</h3>
+      <p class="muted">Add your name, a photo, and enable location to join live.</p>
+      <div class="liveControls">
+        <input id="onboardName" placeholder="your name" />
       </div>
+      <div class="liveControls">
+        <input id="onboardAvatarFile" type="file" accept="image/*" capture="user" />
+        <button id="onboardAvatarBtn" class="ghost">Upload avatar</button>
+      </div>
+      <p class="muted small" id="onboardStatus">Location sharing is required to continue.</p>
       <div class="modalActions">
-        <button id="installBtn" class="primary hidden">Install</button>
-        <button id="installDismiss" class="ghost">Not now</button>
+        <button id="onboardContinue" class="primary">Enable location & enter</button>
       </div>
     </div>
   </div>

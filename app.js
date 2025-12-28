@@ -5,7 +5,7 @@ const LIVE_TABLE = "live_locations";
 const LIVE_ID_KEY = "liveLocationId_v1";
 const LIVE_NAME_KEY = "liveLocationName_v1";
 const LIVE_AVATAR_KEY = "liveLocationAvatar_v1";
-const INSTALL_PROMPT_KEY = "installPromptDismissed_v1";
+const LIVE_ONBOARD_KEY = "liveOnboardComplete_v1";
 const LIVE_MAX_AGE_MS = 2 * 60 * 60 * 1000;
 let currentStopId = localStorage.getItem(LS_CURRENT_KEY) || null;
 
@@ -30,6 +30,8 @@ let liveWatchId = null;
 let liveLastSentAt = 0;
 let liveLastSentPos = null;
 let liveChannel;
+let feedChannel;
+let mediaChannel;
 
 function save() {
   localStorage.setItem(LS_KEY, JSON.stringify([...completed]));
@@ -64,15 +66,18 @@ async function setFeedStop(stop){
 
   if (!currentStopForFeedId){
     title.textContent = "Feed";
-    sub.textContent = "Start the crawl to pick a stop.";
+    sub.textContent = "Pick a stop to post there.";
     document.getElementById("posts").innerHTML = "";
     document.getElementById("mediaGrid").innerHTML = "";
+    if (feedChannel) feedChannel.unsubscribe();
+    if (mediaChannel) mediaChannel.unsubscribe();
     return;
   }
 
   title.textContent = `Feed · ${stop.name}`;
   sub.textContent = stop.address;
 
+  subscribeToFeed(stop.id);
   await loadPostsForStop(currentStopForFeedId);
   await loadMediaForStop(currentStopForFeedId);
 
@@ -145,6 +150,30 @@ async function loadMediaForStop(stopId){
   });
 }
 
+function subscribeToFeed(stopId){
+  if (!stopId) return;
+  if (feedChannel) feedChannel.unsubscribe();
+  if (mediaChannel) mediaChannel.unsubscribe();
+
+  feedChannel = sb
+    .channel(`posts-${stopId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "posts", filter: `stop_id=eq.${stopId}` },
+      () => loadPostsForStop(stopId)
+    )
+    .subscribe();
+
+  mediaChannel = sb
+    .channel(`media-${stopId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "media_posts", filter: `stop_id=eq.${stopId}` },
+      () => loadMediaForStop(stopId)
+    )
+    .subscribe();
+}
+
 async function loadPostsForStop(stopId){
   const { data, error } = await sb
     .from("posts")
@@ -171,7 +200,7 @@ async function loadPostsForStop(stopId){
 }
 
 async function createPost(stopId){
-  const username = document.getElementById("username").value || "";
+  const username = document.getElementById("username").value || getLiveName() || "";
   const message = document.getElementById("postMessage").value || "";
   if (!message.trim()) return;
 
@@ -313,6 +342,14 @@ function renderMarkerStyles(){
   });
 }
 
+function syncNameInputs(){
+  const name = getLiveName();
+  const nameInput = document.getElementById("onboardName");
+  if (nameInput && name) nameInput.value = name;
+  const postName = document.getElementById("username");
+  if (postName && !postName.value.trim()) postName.value = name;
+}
+
 function getLiveId(){
   let id = localStorage.getItem(LIVE_ID_KEY);
   if (!id){
@@ -325,6 +362,10 @@ function getLiveId(){
 function setLiveStatus(message){
   const el = document.getElementById("liveStatus");
   if (el) el.textContent = message;
+}
+
+function getLiveName(){
+  return (localStorage.getItem(LIVE_NAME_KEY) || "").trim();
 }
 
 function getLiveAvatarUrl(){
@@ -352,8 +393,7 @@ function shouldSendLiveUpdate(lat, lon){
 }
 
 async function sendLiveUpdate(lat, lon, accuracy){
-  const username = (document.getElementById("liveName")?.value || "").trim();
-  if (username) localStorage.setItem(LIVE_NAME_KEY, username);
+  const username = getLiveName();
   const avatarUrl = getLiveAvatarUrl();
   const payload = {
     id: getLiveId(),
@@ -369,13 +409,12 @@ async function sendLiveUpdate(lat, lon, accuracy){
   return payload;
 }
 
-async function uploadLiveAvatar(){
-  const input = document.getElementById("liveAvatarFile");
+async function uploadLiveAvatar(inputId = "liveAvatarFile"){
+  const input = document.getElementById(inputId);
   const file = input?.files?.[0];
   if (!file) return;
 
-  const username = (document.getElementById("liveName")?.value || "").trim();
-  if (username) localStorage.setItem(LIVE_NAME_KEY, username);
+  const username = getLiveName();
 
   const ext = file.name.split(".").pop() || "jpg";
   const path = `avatars/${getLiveId()}/${crypto.randomUUID()}.${ext}`;
@@ -544,61 +583,50 @@ function startLiveSharing(){
     setLiveStatus("Geolocation not supported on this device.");
     return;
   }
-  const shareBtn = document.getElementById("liveShareBtn");
-  const stopBtn = document.getElementById("liveStopBtn");
-  if (shareBtn) shareBtn.disabled = true;
-  if (stopBtn) stopBtn.disabled = false;
+  if (liveWatchId !== null) return;
   setLiveStatus("Requesting location permission...");
-  liveWatchId = navigator.geolocation.watchPosition(
-    async (pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      const accuracy = pos.coords.accuracy;
-      if (!shouldSendLiveUpdate(lat, lon)) return;
-      liveLastSentAt = Date.now();
-      liveLastSentPos = { lat, lon };
-      setLiveStatus(`Sharing live · ±${Math.round(accuracy)}m`);
-      const payload = await sendLiveUpdate(lat, lon, accuracy);
-      if (payload) upsertLiveEntry(payload);
-    },
-    (err) => {
-      console.error(err);
-      setLiveStatus("Location error. Check permissions.");
-      if (shareBtn) shareBtn.disabled = false;
-      if (stopBtn) stopBtn.disabled = true;
-    },
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
-  );
+  return new Promise((resolve, reject) => {
+    let ready = false;
+    liveWatchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const accuracy = pos.coords.accuracy;
+        if (!shouldSendLiveUpdate(lat, lon)) return;
+        liveLastSentAt = Date.now();
+        liveLastSentPos = { lat, lon };
+        const name = getLiveName() || "Anonymous";
+        setLiveStatus(`Sharing live as ${name} · ±${Math.round(accuracy)}m`);
+        const payload = await sendLiveUpdate(lat, lon, accuracy);
+        if (payload) upsertLiveEntry(payload);
+        if (!ready){
+          ready = true;
+          resolve();
+        }
+      },
+      (err) => {
+        console.error(err);
+        setLiveStatus("Location error. Check permissions.");
+        reject(err);
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+    );
+  });
 }
 
 async function stopLiveSharing(){
-  const shareBtn = document.getElementById("liveShareBtn");
-  const stopBtn = document.getElementById("liveStopBtn");
   if (liveWatchId !== null){
     navigator.geolocation.clearWatch(liveWatchId);
     liveWatchId = null;
   }
-  if (shareBtn) shareBtn.disabled = false;
-  if (stopBtn) stopBtn.disabled = true;
   setLiveStatus("Sharing paused.");
   const { error } = await sb.from(LIVE_TABLE).delete().eq("id", getLiveId());
   if (error) console.error(error);
 }
 
 function initLive(){
-  const nameInput = document.getElementById("liveName");
-  if (nameInput){
-    nameInput.value = localStorage.getItem(LIVE_NAME_KEY) || "";
-    nameInput.oninput = () => {
-      localStorage.setItem(LIVE_NAME_KEY, nameInput.value.trim());
-    };
-  }
   const avatarBtn = document.getElementById("liveAvatarBtn");
-  if (avatarBtn) avatarBtn.onclick = uploadLiveAvatar;
-  const shareBtn = document.getElementById("liveShareBtn");
-  const stopBtn = document.getElementById("liveStopBtn");
-  if (shareBtn) shareBtn.onclick = startLiveSharing;
-  if (stopBtn) stopBtn.onclick = stopLiveSharing;
+  if (avatarBtn) avatarBtn.onclick = () => uploadLiveAvatar("liveAvatarFile");
 
   liveMap = L.map("liveMap");
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -620,18 +648,14 @@ function initLive(){
     .subscribe();
 }
 
-function setupInstallPrompt(){
-  const modal = document.getElementById("installPrompt");
+function setupOnboarding(){
+  const modal = document.getElementById("onboardModal");
   if (!modal) return;
-  if (localStorage.getItem(INSTALL_PROMPT_KEY) === "true") return;
-  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-  if (isStandalone) return;
 
-  const installBtn = document.getElementById("installBtn");
-  const dismissBtn = document.getElementById("installDismiss");
-  const iosBox = document.getElementById("installIos");
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  let deferredPrompt;
+  const nameInput = document.getElementById("onboardName");
+  const avatarBtn = document.getElementById("onboardAvatarBtn");
+  const continueBtn = document.getElementById("onboardContinue");
+  const statusEl = document.getElementById("onboardStatus");
 
   const showModal = () => {
     modal.classList.remove("hidden");
@@ -640,34 +664,63 @@ function setupInstallPrompt(){
   const hideModal = () => {
     modal.classList.add("hidden");
     document.body.classList.remove("modalOpen");
-    localStorage.setItem(INSTALL_PROMPT_KEY, "true");
+    localStorage.setItem(LIVE_ONBOARD_KEY, "true");
   };
 
-  if (dismissBtn) dismissBtn.onclick = hideModal;
+  const setStatus = (msg) => {
+    if (statusEl) statusEl.textContent = msg;
+  };
 
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (!isIOS && installBtn){
-      installBtn.classList.remove("hidden");
-      showModal();
-    }
-  });
-
-  if (installBtn){
-    installBtn.onclick = async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      hideModal();
+  if (nameInput){
+    nameInput.value = getLiveName();
+    nameInput.oninput = () => {
+      localStorage.setItem(LIVE_NAME_KEY, nameInput.value.trim());
+      syncNameInputs();
     };
   }
 
-  if (isIOS && iosBox){
-    iosBox.classList.remove("hidden");
-    setTimeout(showModal, 800);
+  if (avatarBtn){
+    avatarBtn.onclick = async () => {
+      setStatus("Uploading avatar...");
+      await uploadLiveAvatar("onboardAvatarFile");
+      if (getLiveAvatarUrl()) setStatus("Avatar uploaded. Enable location to continue.");
+    };
   }
+
+  if (continueBtn){
+    continueBtn.onclick = async () => {
+      const name = (nameInput?.value || "").trim();
+      if (!name){
+        setStatus("Please enter your name.");
+        return;
+      }
+      localStorage.setItem(LIVE_NAME_KEY, name);
+      syncNameInputs();
+      if (!getLiveAvatarUrl()){
+        setStatus("Please upload an avatar photo.");
+        return;
+      }
+      setStatus("Requesting location permission...");
+      try {
+        await startLiveSharing();
+        hideModal();
+      } catch (err){
+        setStatus("Location permission is required to continue.");
+      }
+    };
+  }
+
+  if (localStorage.getItem(LIVE_ONBOARD_KEY) === "true"){
+    syncNameInputs();
+    startLiveSharing().catch(() => {
+      localStorage.removeItem(LIVE_ONBOARD_KEY);
+      setStatus("Location permission is required to continue.");
+      showModal();
+    });
+    return;
+  }
+
+  showModal();
 }
 
 function setCommitRef(){
@@ -709,7 +762,7 @@ async function init(){
   });
 
   initLive();
-  setupInstallPrompt();
+  setupOnboarding();
   setCommitRef();
 
   // Optional: start on Map
@@ -718,12 +771,11 @@ async function init(){
   renderProgress();
   renderList();
 
-  document.getElementById("startBtn").onclick = () => {
+  if (!currentStopId && stops.length){
     const s = firstIncompleteStop();
     setCurrentStop(s);
-    openDetail(s);
-    setTab("Map");
-  };
+    setFeedStop(s);
+  }
   document.getElementById("closeDetail").onclick = closeDetail;
 
   // auto-save render
