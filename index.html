@@ -107,8 +107,21 @@
       <div class="panel">
         <h2>Live locations</h2>
         <div class="box">
-          <p><strong>Coming next:</strong> opt-in location sharing + group pins.</p>
-          <p class="muted">UI is ready; we’ll wire it up after this.</p>
+          <p class="muted" id="liveStatus">Not sharing yet.</p>
+          <div class="liveControls">
+            <input id="liveName" placeholder="name (optional)" />
+            <button id="liveShareBtn" class="primary">Start sharing</button>
+            <button id="liveStopBtn" class="ghost" disabled>Stop</button>
+          </div>
+          <p class="muted small">Shares while this tab is open and active.</p>
+          <p class="muted small">We only show the last 2 hours of locations.</p>
+        </div>
+        <div class="box">
+          <div class="mapWrap"><div id="liveMap"></div></div>
+        </div>
+        <div class="box">
+          <h4>People live now</h4>
+          <div id="liveList" class="list"></div>
         </div>
       </div>
     </section>
@@ -120,5 +133,19 @@
     <button data-tab="Feed">Feed</button>
     <button data-tab="Live">Live</button>
   </nav>
+
+  <div id="installPrompt" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <h3>Add this to your home screen</h3>
+      <p class="muted">Install the Späti crawl as an app for a full-screen experience.</p>
+      <div id="installIos" class="hidden">
+        <p class="muted">On iPhone: tap the Share icon, then “Add to Home Screen”.</p>
+      </div>
+      <div class="modalActions">
+        <button id="installBtn" class="primary hidden">Install</button>
+        <button id="installDismiss" class="ghost">Not now</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
