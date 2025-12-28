@@ -328,10 +328,7 @@ function setLiveStatus(message){
 }
 
 function getLiveAvatarUrl(){
-  const input = document.getElementById("liveAvatarUrl");
-  const value = (input?.value || "").trim();
-  if (value) localStorage.setItem(LIVE_AVATAR_KEY, value);
-  return value;
+  return localStorage.getItem(LIVE_AVATAR_KEY) || "";
 }
 
 function distanceMeters(a, b){
@@ -370,6 +367,57 @@ async function sendLiveUpdate(lat, lon, accuracy){
   const { error } = await sb.from(LIVE_TABLE).upsert(payload);
   if (error) console.error(error);
   return payload;
+}
+
+async function uploadLiveAvatar(){
+  const input = document.getElementById("liveAvatarFile");
+  const file = input?.files?.[0];
+  if (!file) return;
+
+  const username = (document.getElementById("liveName")?.value || "").trim();
+  if (username) localStorage.setItem(LIVE_NAME_KEY, username);
+
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `avatars/${getLiveId()}/${crypto.randomUUID()}.${ext}`;
+  const { error: upErr } = await sb.storage.from("media").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type
+  });
+  if (upErr) { console.error(upErr); alert("Upload failed"); return; }
+
+  const { data } = sb.storage.from("media").getPublicUrl(path);
+  const avatarUrl = data.publicUrl;
+  localStorage.setItem(LIVE_AVATAR_KEY, avatarUrl);
+
+  const stopId = currentStopId || stops[0]?.id || null;
+  const { error: insErr } = await sb.from("media_posts").insert({
+    stop_id: stopId,
+    username,
+    caption: "Avatar photo",
+    media_url: avatarUrl,
+    media_type: "avatar"
+  });
+  if (insErr) { console.error(insErr); }
+
+  const { error: liveErr } = await sb.from(LIVE_TABLE).upsert({
+    id: getLiveId(),
+    username: username || "Anonymous",
+    avatar_url: avatarUrl,
+    seen_at: new Date().toISOString()
+  });
+  if (liveErr) console.error(liveErr);
+
+  input.value = "";
+  upsertLiveEntry({
+    id: getLiveId(),
+    username: username || "Anonymous",
+    avatar_url: avatarUrl,
+    lat: liveLastSentPos?.lat,
+    lon: liveLastSentPos?.lon,
+    accuracy: null,
+    seen_at: new Date().toISOString()
+  });
 }
 
 function formatAgo(iso){
@@ -545,13 +593,8 @@ function initLive(){
       localStorage.setItem(LIVE_NAME_KEY, nameInput.value.trim());
     };
   }
-  const avatarInput = document.getElementById("liveAvatarUrl");
-  if (avatarInput){
-    avatarInput.value = localStorage.getItem(LIVE_AVATAR_KEY) || "";
-    avatarInput.oninput = () => {
-      localStorage.setItem(LIVE_AVATAR_KEY, avatarInput.value.trim());
-    };
-  }
+  const avatarBtn = document.getElementById("liveAvatarBtn");
+  if (avatarBtn) avatarBtn.onclick = uploadLiveAvatar;
   const shareBtn = document.getElementById("liveShareBtn");
   const stopBtn = document.getElementById("liveStopBtn");
   if (shareBtn) shareBtn.onclick = startLiveSharing;
