@@ -912,7 +912,7 @@ function setupOnboarding(){
     avatarBtn.onclick = async () => {
       setStatus("Uploading avatar...");
       await uploadLiveAvatar("onboardAvatarFile");
-      if (getLiveAvatarUrl()) setStatus("Avatar uploaded. Enable location to continue.");
+      if (getLiveAvatarUrl()) setStatus("Avatar uploaded.");
     };
   }
 
@@ -925,16 +925,21 @@ function setupOnboarding(){
       }
       localStorage.setItem(LIVE_NAME_KEY, name);
       syncNameInputs();
-      if (!getLiveAvatarUrl()){
-        setStatus("Please upload an avatar photo.");
-        return;
-      }
-      setStatus("Requesting location permission...");
       try {
         await startLiveSharing();
-        hideModal();
+        setStatus("Location sharing enabled.");
       } catch (err){
-        setStatus("Location permission is required to continue.");
+        setStatus("Location sharing is off. You can enable it later.");
+      }
+      hideModal();
+    };
+  }
+
+  if (nameInput){
+    nameInput.onkeydown = (e) => {
+      if (e.key === "Enter"){
+        e.preventDefault();
+        continueBtn?.click();
       }
     };
   }
@@ -942,9 +947,7 @@ function setupOnboarding(){
   if (localStorage.getItem(LIVE_ONBOARD_KEY) === "true"){
     syncNameInputs();
     startLiveSharing().catch(() => {
-      localStorage.removeItem(LIVE_ONBOARD_KEY);
-      setStatus("Location permission is required to continue.");
-      showModal();
+      setStatus("Location sharing is off. You can enable it later.");
     });
     return;
   }
