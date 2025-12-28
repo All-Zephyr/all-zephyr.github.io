@@ -12,6 +12,7 @@ Assets are stored in `photos/` and icons/PWA files live in `icons/` plus `manife
 There is no build step. Serve the root directory with any static server:
 - `python3 -m http.server 8080` — run a local server on port 8080.
 - `open http://localhost:8080` — open the site in a browser.
+For HTTPS geolocation testing on a phone, use `python3 ./serve_https.py` after generating `certs/dev.crt` and `certs/dev.key`.
 
 ## Coding Style & Naming Conventions
 - Indentation: 2 spaces in `app.js` and `styles.css`.
