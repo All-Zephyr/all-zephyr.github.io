@@ -158,6 +158,38 @@ button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
   pointer-events:none;
 }
 
+.commentWrap{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.commentRow{
+  padding:8px;
+  border-radius:10px;
+  background:rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.06);
+}
+.commentMeta{
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+.commentComposer{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-top:8px;
+}
+.commentComposer input{
+  flex:1;
+  padding:8px 10px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.25);
+  color: var(--text);
+}
+
 .postComposer{
   display:flex;
   gap:8px;

@@ -33,8 +33,10 @@ let liveLastSentPos = null;
 let liveChannel;
 let feedChannel;
 let mediaChannel;
+let commentsChannel;
 let feedCache = [];
 let isPosting = false;
+let commentsByKey = new Map();
 
 function save() {
   localStorage.setItem(LS_KEY, JSON.stringify([...completed]));
@@ -67,20 +69,8 @@ async function setFeedStop(stop){
   const title = document.getElementById("feedTitle");
   const sub = document.getElementById("feedSubtitle");
 
-  if (!currentStopForFeedId){
-    title.textContent = "Feed";
-    sub.textContent = "Pick a stop to post there.";
-    document.getElementById("feedStream").innerHTML = "";
-    if (feedChannel) feedChannel.unsubscribe();
-    if (mediaChannel) mediaChannel.unsubscribe();
-    return;
-  }
-
-  title.textContent = `Feed · ${stop.name}`;
-  sub.textContent = stop.address;
-
-  subscribeToFeed(stop.id);
-  await loadFeedForStop(currentStopForFeedId);
+  title.textContent = "Feed";
+  sub.textContent = "Everyone's latest posts across all stops.";
 
   // Ensure buttons post/upload to the current stop
   document.getElementById("postBtn").onclick = () => createPost(currentStopForFeedId);
@@ -95,7 +85,7 @@ async function setFeedStop(stop){
   }
   const togglePins = document.getElementById("togglePostPins");
   if (togglePins){
-    togglePins.onchange = () => loadFeedForStop(currentStopForFeedId);
+    togglePins.onchange = () => loadFeedAll();
   }
   const mediaClose = document.getElementById("mediaClose");
   if (mediaClose) mediaClose.onclick = closeMediaModal;
@@ -138,43 +128,49 @@ async function uploadMedia(stopId, message){
   return mediaUrl;
 }
 
-function subscribeToFeed(stopId){
-  if (!stopId) return;
+function subscribeToFeed(){
   if (feedChannel) feedChannel.unsubscribe();
   if (mediaChannel) mediaChannel.unsubscribe();
+  if (commentsChannel) commentsChannel.unsubscribe();
 
   feedChannel = sb
-    .channel(`posts-${stopId}`)
+    .channel("posts-all")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "posts", filter: `stop_id=eq.${stopId}` },
-      () => loadFeedForStop(stopId)
+      { event: "*", schema: "public", table: "posts" },
+      () => loadFeedAll()
     )
     .subscribe();
 
   mediaChannel = sb
-    .channel(`media-${stopId}`)
+    .channel("media-all")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "media_posts", filter: `stop_id=eq.${stopId}` },
-      () => loadFeedForStop(stopId)
+      { event: "*", schema: "public", table: "media_posts" },
+      () => loadFeedAll()
+    )
+    .subscribe();
+
+  commentsChannel = sb
+    .channel("comments-all")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "comments" },
+      () => loadFeedAll()
     )
     .subscribe();
 }
 
-async function loadFeedForStop(stopId){
-  if (!stopId) return;
+async function loadFeedAll(){
   const [postsRes, mediaRes] = await Promise.all([
     sb
       .from("posts")
       .select("id,stop_id,username,message,created_at,lat,lon")
-      .eq("stop_id", stopId)
       .order("created_at", { ascending: false })
       .limit(50),
     sb
       .from("media_posts")
       .select("id,stop_id,username,caption,media_url,media_type,created_at")
-      .eq("stop_id", stopId)
       .order("created_at", { ascending: false })
       .limit(50)
   ]);
@@ -185,8 +181,65 @@ async function loadFeedForStop(stopId){
   const posts = postsRes.data.map(item => ({ ...item, kind: "post" }));
   const media = mediaRes.data.map(item => ({ ...item, kind: "media" }));
   feedCache = [...posts, ...media].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  await loadCommentsForItems(feedCache);
   renderFeedStream(feedCache);
   renderPostPins(posts);
+}
+
+async function loadCommentsForItems(items){
+  commentsByKey.clear();
+  if (!items.length) return;
+  const postIds = items.filter(i => i.kind === "post").map(i => i.id);
+  const mediaIds = items.filter(i => i.kind === "media").map(i => i.id);
+
+  const requests = [];
+  if (postIds.length){
+    requests.push(
+      sb
+        .from("comments")
+        .select("id,target_type,target_id,username,message,created_at")
+        .eq("target_type", "post")
+        .in("target_id", postIds)
+        .order("created_at", { ascending: true })
+    );
+  }
+  if (mediaIds.length){
+    requests.push(
+      sb
+        .from("comments")
+        .select("id,target_type,target_id,username,message,created_at")
+        .eq("target_type", "media")
+        .in("target_id", mediaIds)
+        .order("created_at", { ascending: true })
+    );
+  }
+
+  const results = await Promise.all(requests);
+  for (const res of results){
+    if (res.error){ console.error(res.error); continue; }
+    res.data.forEach(c => {
+      const key = `${c.target_type}:${c.target_id}`;
+      if (!commentsByKey.has(key)) commentsByKey.set(key, []);
+      commentsByKey.get(key).push(c);
+    });
+  }
+}
+
+async function createComment(stopId, targetType, targetId, input){
+  const message = (input?.value || "").trim();
+  if (!message) return;
+  const username = getLiveName() || "anonymous";
+  const { error } = await sb.from("comments").insert({
+    stop_id: stopId,
+    target_type: targetType,
+    target_id: targetId,
+    username,
+    message
+  });
+  if (error){ console.error(error); return; }
+  input.value = "";
+  await loadCommentsForItems(feedCache);
+  renderFeedStream(feedCache);
 }
 
 function renderFeedStream(items){
@@ -249,6 +302,42 @@ function renderFeedStream(items){
       }
       div.appendChild(wrap);
     }
+
+    const commentKey = `${item.kind}:${item.id}`;
+    const comments = commentsByKey.get(commentKey) || [];
+    const commentWrap = document.createElement("div");
+    commentWrap.className = "commentWrap";
+    comments.forEach(c => {
+      const row = document.createElement("div");
+      row.className = "commentRow";
+      const cWho = c.username?.trim() ? c.username.trim() : "anonymous";
+      const cWhen = new Date(c.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      row.innerHTML = `
+        <div class="commentMeta">${cWho} · ${cWhen}</div>
+        <div>${escapeHtml(c.message)}</div>
+      `;
+      commentWrap.appendChild(row);
+    });
+
+    const form = document.createElement("div");
+    form.className = "commentComposer";
+    const input = document.createElement("input");
+    input.placeholder = "Write a comment…";
+    const btn = document.createElement("button");
+    btn.className = "ghost small";
+    btn.textContent = "Send";
+    btn.onclick = () => createComment(item.stop_id, item.kind, item.id, input);
+    input.onkeydown = (e) => {
+      if (e.key === "Enter"){
+        e.preventDefault();
+        createComment(item.stop_id, item.kind, item.id, input);
+      }
+    };
+    form.appendChild(input);
+    form.appendChild(btn);
+
+    div.appendChild(commentWrap);
+    div.appendChild(form);
     wrap.appendChild(div);
   });
 }
@@ -295,14 +384,20 @@ async function createPost(stopId){
   const hasFile = !!fileInput?.files?.[0];
   if (!message.trim() && !hasFile) return;
 
+  const stopToUse = stopId || currentStopId || stops[0]?.id || null;
+  if (!stopToUse){
+    console.error("No stop selected for posting.");
+    return;
+  }
+
   isPosting = true;
   try {
     if (hasFile){
-      await uploadMedia(stopId, message);
+      await uploadMedia(stopToUse, message);
     } else if (message.trim()){
       const loc = await getPostLocation();
       const { error } = await sb.from("posts").insert({
-        stop_id: stopId,
+        stop_id: stopToUse,
         username,
         message: message.trim(),
         lat: loc?.lat || null,
@@ -310,7 +405,7 @@ async function createPost(stopId){
       });
       if (error) { console.error(error); }
     }
-    await loadFeedForStop(stopId);
+    await loadFeedAll();
   } finally {
     if (input) input.value = "";
     isPosting = false;
@@ -914,6 +1009,8 @@ async function init(){
       setFeedStop(s);
     }
   }
+  subscribeToFeed();
+  loadFeedAll();
   document.getElementById("closeDetail").onclick = closeDetail;
 
   // auto-save render

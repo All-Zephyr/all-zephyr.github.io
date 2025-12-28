@@ -87,22 +87,15 @@
         <p class="muted" id="feedSubtitle">Open a stop to post there.</p>
 
         <div class="box">
-          <h4>Messages</h4>
+          <h4>Feed</h4>
           <div class="postComposer">
             <input id="username" placeholder="name (optional)" />
             <input id="postMessage" placeholder="post a message…" />
+            <input id="postMedia" type="file" accept="image/*,video/*" />
             <button id="postBtn" class="primary">Post</button>
           </div>
 
-          <div id="posts" class="posts"></div>
-        </div>
-
-        <div class="box">
-          <h4>Photos & videos</h4>
-          <input id="mediaFile" type="file" accept="image/*,video/*" />
-          <input id="mediaCaption" placeholder="caption (optional)" />
-          <button id="uploadBtn" class="primary">Upload</button>
-          <div id="mediaGrid" class="mediaGrid"></div>
+          <div id="feedStream" class="feedStream"></div>
         </div>
       </div>
     </section>
@@ -155,6 +148,13 @@
       <div class="modalActions">
         <button id="onboardContinue" class="primary">Enable location & enter</button>
       </div>
+    </div>
+  </div>
+
+  <div id="mediaModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard mediaModalCard">
+      <button id="mediaClose" class="ghost small">Close</button>
+      <div id="mediaModalBody"></div>
     </div>
   </div>
 </body>
