@@ -1,9 +1,10 @@
 const LS_KEY = "spatiCrawlCompleted_v1";
 const LS_CURRENT_KEY = "spatiCrawlCurrentStop_v1";
-// Requires a Supabase table: live_locations (id uuid, username text, lat float, lon float, accuracy float, seen_at timestamptz).
+// Requires a Supabase table: live_locations (id uuid, username text, avatar_url text, lat float, lon float, accuracy float, seen_at timestamptz).
 const LIVE_TABLE = "live_locations";
 const LIVE_ID_KEY = "liveLocationId_v1";
 const LIVE_NAME_KEY = "liveLocationName_v1";
+const LIVE_AVATAR_KEY = "liveLocationAvatar_v1";
 const INSTALL_PROMPT_KEY = "installPromptDismissed_v1";
 const LIVE_MAX_AGE_MS = 2 * 60 * 60 * 1000;
 let currentStopId = localStorage.getItem(LS_CURRENT_KEY) || null;
@@ -326,6 +327,13 @@ function setLiveStatus(message){
   if (el) el.textContent = message;
 }
 
+function getLiveAvatarUrl(){
+  const input = document.getElementById("liveAvatarUrl");
+  const value = (input?.value || "").trim();
+  if (value) localStorage.setItem(LIVE_AVATAR_KEY, value);
+  return value;
+}
+
 function distanceMeters(a, b){
   if (!a || !b) return Infinity;
   const R = 6371000;
@@ -349,9 +357,11 @@ function shouldSendLiveUpdate(lat, lon){
 async function sendLiveUpdate(lat, lon, accuracy){
   const username = (document.getElementById("liveName")?.value || "").trim();
   if (username) localStorage.setItem(LIVE_NAME_KEY, username);
+  const avatarUrl = getLiveAvatarUrl();
   const payload = {
     id: getLiveId(),
     username: username || "Anonymous",
+    avatar_url: avatarUrl || null,
     lat,
     lon,
     accuracy,
@@ -392,6 +402,19 @@ function removeLiveEntry(id){
   renderLiveList();
 }
 
+function buildLiveIcon(entry){
+  if (entry?.avatar_url){
+    return L.divIcon({
+      className: "liveMarker",
+      iconSize: [44, 44],
+      iconAnchor: [22, 44],
+      popupAnchor: [0, -36],
+      html: `<img class="liveMarkerImg" src="${entry.avatar_url}" alt="">`
+    });
+  }
+  return new L.Icon.Default();
+}
+
 function renderLiveMarkers(){
   liveEntries.forEach((entry, id) => {
     if (!entry.lat || !entry.lon) return;
@@ -400,12 +423,13 @@ function renderLiveMarkers(){
       : (entry.username || "Anonymous");
     let marker = liveMarkers.get(id);
     if (!marker){
-      marker = L.marker([entry.lat, entry.lon], { title: label })
+      marker = L.marker([entry.lat, entry.lon], { title: label, icon: buildLiveIcon(entry) })
         .addTo(liveMap)
         .bindPopup(label);
       liveMarkers.set(id, marker);
     } else {
       marker.setLatLng([entry.lat, entry.lon]);
+      marker.setIcon(buildLiveIcon(entry));
       marker.setPopupContent(label);
     }
   });
@@ -427,12 +451,19 @@ function renderLiveList(){
     const label = entry.id === getLiveId()
       ? `${entry.username || "You"} (you)`
       : (entry.username || "Anonymous");
+    const initials = (entry.username || "A").trim().slice(0, 1).toUpperCase();
     div.innerHTML = `
-      <div class="itemHead">
-        <div class="itemName">${label}</div>
-        <div class="badge">${formatAgo(entry.seen_at)}</div>
+      <div class="liveRow">
+        ${entry.avatar_url ? `<img class="liveAvatar" src="${entry.avatar_url}" alt="">`
+          : `<div class="liveAvatarPlaceholder">${initials}</div>`}
+        <div class="liveInfo">
+          <div class="itemHead">
+            <div class="itemName">${label}</div>
+            <div class="badge">${formatAgo(entry.seen_at)}</div>
+          </div>
+          <div class="muted">±${Math.round(entry.accuracy || 0)}m</div>
+        </div>
       </div>
-      <div class="muted">±${Math.round(entry.accuracy || 0)}m</div>
     `;
     div.onclick = () => {
       const marker = liveMarkers.get(entry.id);
@@ -449,7 +480,7 @@ async function loadLiveLocations(){
   const cutoff = new Date(Date.now() - LIVE_MAX_AGE_MS).toISOString();
   const { data, error } = await sb
     .from(LIVE_TABLE)
-    .select("id,username,lat,lon,accuracy,seen_at")
+    .select("id,username,avatar_url,lat,lon,accuracy,seen_at")
     .gte("seen_at", cutoff)
     .order("seen_at", { ascending: false })
     .limit(200);
@@ -512,6 +543,13 @@ function initLive(){
     nameInput.value = localStorage.getItem(LIVE_NAME_KEY) || "";
     nameInput.oninput = () => {
       localStorage.setItem(LIVE_NAME_KEY, nameInput.value.trim());
+    };
+  }
+  const avatarInput = document.getElementById("liveAvatarUrl");
+  if (avatarInput){
+    avatarInput.value = localStorage.getItem(LIVE_AVATAR_KEY) || "";
+    avatarInput.oninput = () => {
+      localStorage.setItem(LIVE_AVATAR_KEY, avatarInput.value.trim());
     };
   }
   const shareBtn = document.getElementById("liveShareBtn");
