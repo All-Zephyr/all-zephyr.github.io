@@ -33,6 +33,8 @@ let liveLastSentPos = null;
 let liveChannel;
 let feedChannel;
 let mediaChannel;
+let feedCache = [];
+let isPosting = false;
 
 function save() {
   localStorage.setItem(LS_KEY, JSON.stringify([...completed]));
@@ -68,8 +70,7 @@ async function setFeedStop(stop){
   if (!currentStopForFeedId){
     title.textContent = "Feed";
     sub.textContent = "Pick a stop to post there.";
-    document.getElementById("posts").innerHTML = "";
-    document.getElementById("mediaGrid").innerHTML = "";
+    document.getElementById("feedStream").innerHTML = "";
     if (feedChannel) feedChannel.unsubscribe();
     if (mediaChannel) mediaChannel.unsubscribe();
     return;
@@ -79,8 +80,7 @@ async function setFeedStop(stop){
   sub.textContent = stop.address;
 
   subscribeToFeed(stop.id);
-  await loadPostsForStop(currentStopForFeedId);
-  await loadMediaForStop(currentStopForFeedId);
+  await loadFeedForStop(currentStopForFeedId);
 
   // Ensure buttons post/upload to the current stop
   document.getElementById("postBtn").onclick = () => createPost(currentStopForFeedId);
@@ -95,18 +95,19 @@ async function setFeedStop(stop){
   }
   const togglePins = document.getElementById("togglePostPins");
   if (togglePins){
-    togglePins.onchange = () => loadPostsForStop(currentStopForFeedId);
+    togglePins.onchange = () => loadFeedForStop(currentStopForFeedId);
   }
-  document.getElementById("uploadBtn").onclick = () => uploadMedia(currentStopForFeedId);
+  const mediaClose = document.getElementById("mediaClose");
+  if (mediaClose) mediaClose.onclick = closeMediaModal;
 }
 
-async function uploadMedia(stopId){
-  const fileInput = document.getElementById("mediaFile");
-  const file = fileInput.files?.[0];
-  if (!file) return;
+async function uploadMedia(stopId, message){
+  const fileInput = document.getElementById("postMedia");
+  const file = fileInput?.files?.[0];
+  if (!file) return null;
 
-  const username = (document.getElementById("username")?.value || "").trim();
-  const caption = (document.getElementById("mediaCaption")?.value || "").trim();
+  const username = (document.getElementById("username")?.value || "").trim() || getLiveName();
+  const caption = (message || "").trim();
 
   const isVideo = file.type.startsWith("video/");
   const mediaType = isVideo ? "video" : "image";
@@ -114,19 +115,16 @@ async function uploadMedia(stopId){
   const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
   const path = `${stopId}/${crypto.randomUUID()}.${ext}`;
 
-  // Upload to Storage
   const { error: upErr } = await sb.storage.from("media").upload(path, file, {
     cacheControl: "3600",
     upsert: false,
     contentType: file.type
   });
-  if (upErr) { console.error(upErr); alert("Upload failed"); return; }
+  if (upErr) { console.error(upErr); alert("Upload failed"); return null; }
 
-  // Get a public URL
   const { data } = sb.storage.from("media").getPublicUrl(path);
   const mediaUrl = data.publicUrl;
 
-  // Save metadata to DB
   const { error: insErr } = await sb.from("media_posts").insert({
     stop_id: stopId,
     username,
@@ -134,34 +132,10 @@ async function uploadMedia(stopId){
     media_url: mediaUrl,
     media_type: mediaType
   });
-  if (insErr) { console.error(insErr); alert("Save failed"); return; }
+  if (insErr) { console.error(insErr); alert("Save failed"); return null; }
 
   fileInput.value = "";
-  document.getElementById("mediaCaption").value = "";
-  await loadMediaForStop(stopId);
-}
-
-async function loadMediaForStop(stopId){
-  const { data, error } = await sb
-    .from("media_posts")
-    .select("*")
-    .eq("stop_id", stopId)
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  if (error) { console.error(error); return; }
-
-  const grid = document.getElementById("mediaGrid");
-  grid.innerHTML = "";
-  data.forEach(item => {
-    const wrap = document.createElement("div");
-    if (item.media_type === "video") {
-      wrap.innerHTML = `<video controls playsinline src="${item.media_url}"></video>`;
-    } else {
-      wrap.innerHTML = `<img loading="lazy" src="${item.media_url}" alt="">`;
-    }
-    grid.appendChild(wrap);
-  });
+  return mediaUrl;
 }
 
 function subscribeToFeed(stopId){
@@ -174,7 +148,7 @@ function subscribeToFeed(stopId){
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "posts", filter: `stop_id=eq.${stopId}` },
-      () => loadPostsForStop(stopId)
+      () => loadFeedForStop(stopId)
     )
     .subscribe();
 
@@ -183,57 +157,164 @@ function subscribeToFeed(stopId){
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "media_posts", filter: `stop_id=eq.${stopId}` },
-      () => loadMediaForStop(stopId)
+      () => loadFeedForStop(stopId)
     )
     .subscribe();
 }
 
-async function loadPostsForStop(stopId){
-  const { data, error } = await sb
-    .from("posts")
-    .select("id,stop_id,username,message,created_at,lat,lon")
-    .eq("stop_id", stopId)
-    .order("created_at", { ascending: false })
-    .limit(50);
+async function loadFeedForStop(stopId){
+  if (!stopId) return;
+  const [postsRes, mediaRes] = await Promise.all([
+    sb
+      .from("posts")
+      .select("id,stop_id,username,message,created_at,lat,lon")
+      .eq("stop_id", stopId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    sb
+      .from("media_posts")
+      .select("id,stop_id,username,caption,media_url,media_type,created_at")
+      .eq("stop_id", stopId)
+      .order("created_at", { ascending: false })
+      .limit(50)
+  ]);
 
-  if (error) { console.error(error); return; }
+  if (postsRes.error) { console.error(postsRes.error); return; }
+  if (mediaRes.error) { console.error(mediaRes.error); return; }
 
-  const wrap = document.getElementById("posts");
+  const posts = postsRes.data.map(item => ({ ...item, kind: "post" }));
+  const media = mediaRes.data.map(item => ({ ...item, kind: "media" }));
+  feedCache = [...posts, ...media].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  renderFeedStream(feedCache);
+  renderPostPins(posts);
+}
+
+function renderFeedStream(items){
+  const wrap = document.getElementById("feedStream");
+  if (!wrap) return;
+  if (!items.length){
+    wrap.innerHTML = "<div class=\"muted\">No posts yet.</div>";
+    return;
+  }
   wrap.innerHTML = "";
-  data.forEach(p => {
+  items.forEach(item => {
     const div = document.createElement("div");
-    div.className = "post";
-    const who = p.username?.trim() ? p.username.trim() : "anonymous";
-    const when = new Date(p.created_at).toLocaleString();
+    div.className = "feedItem";
+    const who = item.username?.trim() ? item.username.trim() : "anonymous";
+    const when = new Date(item.created_at).toLocaleString();
+    const message = item.kind === "post" ? item.message : item.caption;
     div.innerHTML = `
-      <div class="postMeta">${who} · ${when}</div>
-      <div>${escapeHtml(p.message)}</div>
+      <div class="feedMeta">${who} · ${when}</div>
+      ${message ? `<div>${escapeHtml(message)}</div>` : ""}
     `;
+    if (item.kind === "media" && item.media_url){
+      const isVideo = item.media_type === "video";
+      const wrap = document.createElement("div");
+      wrap.className = "feedMediaWrap";
+      const mediaEl = document.createElement(isVideo ? "video" : "img");
+      mediaEl.className = "feedMedia";
+      if (isVideo){
+        mediaEl.src = item.media_url;
+        mediaEl.controls = false;
+        mediaEl.playsInline = true;
+        mediaEl.muted = true;
+        mediaEl.preload = "metadata";
+        mediaEl.addEventListener("loadedmetadata", () => {
+          if (mediaEl.duration && mediaEl.duration > 0.2) {
+            mediaEl.currentTime = 0.1;
+          }
+        });
+        mediaEl.addEventListener("seeked", () => {
+          mediaEl.pause();
+        });
+      } else {
+        mediaEl.src = item.media_url;
+        mediaEl.loading = "lazy";
+      }
+      const openFull = (e) => {
+        if (e) e.preventDefault();
+        if (isVideo) mediaEl.pause();
+        openMediaModal(item.media_url, item.media_type);
+      };
+      wrap.onclick = openFull;
+      if (isVideo){
+        mediaEl.onplay = openFull;
+      }
+      wrap.appendChild(mediaEl);
+      if (isVideo){
+        const playBadge = document.createElement("div");
+        playBadge.className = "feedPlay";
+        playBadge.textContent = "▶";
+        wrap.appendChild(playBadge);
+      }
+      div.appendChild(wrap);
+    }
     wrap.appendChild(div);
   });
+}
 
-  renderPostPins(data);
+function openMediaModal(url, type){
+  const modal = document.getElementById("mediaModal");
+  const body = document.getElementById("mediaModalBody");
+  if (!modal || !body) return;
+  body.innerHTML = "";
+  if (type === "video"){
+    const video = document.createElement("video");
+    video.src = url;
+    video.controls = true;
+    video.playsInline = true;
+    video.autoplay = true;
+    body.appendChild(video);
+  } else {
+    const img = document.createElement("img");
+    img.src = url;
+    body.appendChild(img);
+  }
+  modal.classList.remove("hidden");
+  document.body.classList.add("modalOpen");
+  modal.onclick = (e) => {
+    if (e.target === modal) closeMediaModal();
+  };
+}
+
+function closeMediaModal(){
+  const modal = document.getElementById("mediaModal");
+  const body = document.getElementById("mediaModalBody");
+  if (!modal || !body) return;
+  body.innerHTML = "";
+  modal.classList.add("hidden");
+  document.body.classList.remove("modalOpen");
 }
 
 async function createPost(stopId){
+  if (isPosting) return;
   const username = document.getElementById("username").value || getLiveName() || "";
   const input = document.getElementById("postMessage");
   const message = input?.value || "";
-  if (!message.trim()) return;
+  const fileInput = document.getElementById("postMedia");
+  const hasFile = !!fileInput?.files?.[0];
+  if (!message.trim() && !hasFile) return;
 
-  const loc = await getPostLocation();
-  const { error } = await sb.from("posts").insert({
-    stop_id: stopId,
-    username,
-    message: message.trim(),
-    lat: loc?.lat || null,
-    lon: loc?.lon || null
-  });
-
-  if (error) { console.error(error); return; }
-
-  if (input) input.value = "";
-  await loadPostsForStop(stopId);
+  isPosting = true;
+  try {
+    if (hasFile){
+      await uploadMedia(stopId, message);
+    } else if (message.trim()){
+      const loc = await getPostLocation();
+      const { error } = await sb.from("posts").insert({
+        stop_id: stopId,
+        username,
+        message: message.trim(),
+        lat: loc?.lat || null,
+        lon: loc?.lon || null
+      });
+      if (error) { console.error(error); }
+    }
+    await loadFeedForStop(stopId);
+  } finally {
+    if (input) input.value = "";
+    isPosting = false;
+  }
 }
 
 function escapeHtml(s){
@@ -315,10 +396,8 @@ function firstIncompleteStop(){
 
 async function openDetail(stop){
   setCurrentStop(stop);
-  await loadPostsForStop(stop.id);
-  document.getElementById("postBtn").onclick = () => createPost(stop.id);
-  setTab("Map");
   await setFeedStop(stop);
+  setTab("Map");
 
   const img = document.getElementById("dPhoto");
   if (stop.imageName) {
@@ -330,14 +409,8 @@ async function openDetail(stop){
   
   const detail = document.getElementById("detail");
   detail.classList.remove("hidden");
-  await loadMediaForStop(stop.id);
-
-const uploadBtn = document.getElementById("uploadBtn");
-if (uploadBtn) {
-  uploadBtn.onclick = () => uploadMedia(stop.id);
   document.getElementById("detail")
-  .scrollIntoView({ behavior: "smooth", block: "start" });
-}
+    .scrollIntoView({ behavior: "smooth", block: "start" });
 
   document.getElementById("dName").textContent = stop.name;
   document.getElementById("dAddr").textContent = stop.address;
