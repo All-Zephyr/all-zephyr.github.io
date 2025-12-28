@@ -6,14 +6,8 @@
   --accent:#b30000;
   --accent2:#0a7a2a;
 }
-.currentStop{
-  margin:6px 0 0;
-  font-size:13px;
-  color: var(--text);
-  opacity: .9;
-}
-.currentStop strong{ color: #fff; }
 *{box-sizing:border-box}
+
 body{
   margin:0;
   font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
@@ -23,43 +17,9 @@ body{
   color:var(--text);
 }
 
-.tabs{padding:14px; padding-bottom:80px;}
-.tabPane{display:none;}
-.tabPane.active{display:block;}
-
-.bottomNav{
-  position:fixed; left:0; right:0; bottom:0;
-  display:flex;
-  gap:10px;
-  padding:10px;
-  background:rgba(0,0,0,.65);
-  backdrop-filter: blur(10px);
-  border-top:1px solid rgba(255,255,255,.10);
-}
-.bottomNav button{flex:1}
-.bottomNav button.active{outline:2px solid rgba(255,255,255,.18)}
-
-.stopPhoto{
-  width:100%;
-  max-height:240px;
-  object-fit:cover;
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,.10);
-  margin:10px 0;
-}
 .hidden{display:none;}
-.posts{display:flex; flex-direction:column; gap:8px; margin-top:10px}
-.post{padding:10px; border-radius:14px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08)}
-.postMeta{font-size:12px; color:var(--muted); margin-bottom:4px}
-.postComposer{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
-.postComposer input{
-  flex: 1 1 160px;
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.25);
-  color: var(--text);
-}
+.muted{color:var(--muted)}
+
 .header{
   padding:16px 18px;
   display:flex;
@@ -68,11 +28,12 @@ body{
   gap:12px;
   border-bottom:1px solid rgba(255,255,255,.08);
 }
-
 .title{display:flex; gap:12px; align-items:center}
 .emoji{font-size:36px}
 h1{margin:0; font-size:18px}
 #progress{margin:2px 0 0; color:var(--muted); font-size:13px}
+.currentStop{margin:6px 0 0; font-size:13px; opacity:.9}
+.currentStop strong{color:#fff}
 
 .actions{display:flex; gap:10px; flex-wrap:wrap}
 button, a.link{
@@ -90,43 +51,36 @@ button, a.link{
 button.small{padding:6px 10px; border-radius:12px}
 button.primary{
   background: linear-gradient(135deg, rgba(179,0,0,.9), rgba(10,122,42,.55));
-  border: none;
+  border:none;
 }
 button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
 
-.layout{
-  display:grid;
-  grid-template-columns: 1.4fr .9fr;
-  gap:14px;
-  padding:14px;
-  height: calc(100vh - 70px);
-}
-@media (max-width: 900px){
-  .layout{grid-template-columns:1fr; height:auto}
-  #map{height:55vh}
-}
+.tabs{padding:14px; padding-bottom:84px;}
+.tabPane{display:none;}
+.tabPane.active{display:block;}
 
-.stopPhoto{
-  width:100%;
-  max-height:240px;
-  object-fit:cover;
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,.10);
-  margin:10px 0;
+.bottomNav{
+  position:fixed; left:0; right:0; bottom:0;
+  display:flex;
+  gap:10px;
+  padding:10px;
+  background:rgba(0,0,0,.65);
+  backdrop-filter: blur(10px);
+  border-top:1px solid rgba(255,255,255,.10);
 }
+.bottomNav button{flex:1}
+.bottomNav button.active{outline:2px solid rgba(255,255,255,.18)}
 
-.hidden{display:none;}
 .mapWrap{background:var(--card); border-radius:18px; overflow:hidden}
-#map{height:100%; min-height:420px}
+#map{height:55vh; min-height:380px}
 
 .panel{
   background:var(--card);
   border-radius:18px;
   padding:14px;
-  overflow:auto;
+  margin-top:14px;
 }
-.mediaGrid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px}
-.mediaGrid img,.mediaGrid video{width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.10); background:#000}
+
 .list{display:flex; flex-direction:column; gap:10px; margin-top:10px}
 .item{
   padding:12px;
@@ -138,11 +92,10 @@ button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
 .itemHead{display:flex; justify-content:space-between; gap:10px}
 .itemName{font-weight:700}
 .badge{font-size:12px; color:var(--muted)}
-.muted{color:var(--muted)}
 
 .detail{margin-top:14px}
-.detail.hidden{display:none}
 .detailHead{display:flex; align-items:center; justify-content:space-between}
+
 .box{
   margin-top:10px;
   padding:12px;
@@ -151,4 +104,31 @@ button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
   border:1px solid rgba(255,255,255,.08);
 }
 .box h4{margin:0 0 6px; font-size:13px; color:var(--muted); letter-spacing:.2px}
+
 .detailActions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
+
+.stopPhoto{
+  width:100%;
+  max-height:240px;
+  object-fit:cover;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  margin:10px 0;
+}
+
+.posts{display:flex; flex-direction:column; gap:8px; margin-top:10px}
+.post{padding:10px; border-radius:14px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08)}
+.postMeta{font-size:12px; color:var(--muted); margin-bottom:4px}
+
+.postComposer{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+.postComposer input{
+  flex: 1 1 160px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.25);
+  color: var(--text);
+}
+
+.mediaGrid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px}
+.mediaGrid img,.mediaGrid video{width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.10); background:#000}
