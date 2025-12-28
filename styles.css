@@ -232,6 +232,13 @@ button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
   pointer-events:none;
 }
 
+.checkRow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+}
+
 .commitRef{
   position:fixed;
   left:50%;

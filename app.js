@@ -23,6 +23,7 @@ let completed = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]"));
 let map;
 let markers = new Map();
 let routeLine;
+let postPins = L.layerGroup();
 let liveMap;
 let liveMarkers = new Map();
 let liveEntries = new Map();
@@ -91,6 +92,10 @@ async function setFeedStop(stop){
         createPost(currentStopForFeedId);
       }
     };
+  }
+  const togglePins = document.getElementById("togglePostPins");
+  if (togglePins){
+    togglePins.onchange = () => loadPostsForStop(currentStopForFeedId);
   }
   document.getElementById("uploadBtn").onclick = () => uploadMedia(currentStopForFeedId);
 }
@@ -186,7 +191,7 @@ function subscribeToFeed(stopId){
 async function loadPostsForStop(stopId){
   const { data, error } = await sb
     .from("posts")
-    .select("*")
+    .select("id,stop_id,username,message,created_at,lat,lon")
     .eq("stop_id", stopId)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -206,6 +211,8 @@ async function loadPostsForStop(stopId){
     `;
     wrap.appendChild(div);
   });
+
+  renderPostPins(data);
 }
 
 async function createPost(stopId){
@@ -214,10 +221,13 @@ async function createPost(stopId){
   const message = input?.value || "";
   if (!message.trim()) return;
 
+  const loc = await getPostLocation();
   const { error } = await sb.from("posts").insert({
     stop_id: stopId,
     username,
-    message: message.trim()
+    message: message.trim(),
+    lat: loc?.lat || null,
+    lon: loc?.lon || null
   });
 
   if (error) { console.error(error); return; }
@@ -256,6 +266,47 @@ function renderCurrentStop(){
 function renderProgress(){
   const el = document.getElementById("progress");
   el.textContent = `${completed.size} / ${stops.length} completed`;
+}
+
+function shouldShowPostPins(){
+  return document.getElementById("togglePostPins")?.checked;
+}
+
+function clearPostPins(){
+  postPins.clearLayers();
+}
+
+function renderPostPins(posts){
+  if (!shouldShowPostPins()){
+    clearPostPins();
+    return;
+  }
+  clearPostPins();
+  posts.forEach(p => {
+    if (p.lat == null || p.lon == null) return;
+    const who = p.username?.trim() ? p.username.trim() : "anonymous";
+    const when = new Date(p.created_at).toLocaleString();
+    const marker = L.circleMarker([p.lat, p.lon], {
+      radius: 6,
+      weight: 2,
+      color: "#ffffff",
+      fillColor: "#b30000",
+      fillOpacity: 0.85
+    }).bindPopup(`<strong>${who}</strong><br>${when}<br>${escapeHtml(p.message || "")}`);
+    postPins.addLayer(marker);
+  });
+}
+
+async function getPostLocation(){
+  if (liveLastSentPos) return liveLastSentPos;
+  if (!navigator.geolocation) return null;
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: true, maximumAge: 15000, timeout: 8000 }
+    );
+  });
 }
 
 function firstIncompleteStop(){
@@ -756,6 +807,7 @@ async function init(){
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
+  postPins.addTo(map);
 
   stops.forEach((s) => {
     const marker = L.marker([s.lat, s.lon], { title: s.name })
