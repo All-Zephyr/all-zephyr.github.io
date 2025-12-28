@@ -299,6 +299,7 @@ function fitRoute(){
 
 async function init(){
   renderCurrentStop();
+
   const res = await fetch("./spatis.json");
   stops = await res.json();
 
@@ -308,16 +309,23 @@ async function init(){
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
 
-  stops.forEach((s, idx) => {
+  stops.forEach((s) => {
     const marker = L.marker([s.lat, s.lon], { title: s.name })
       .addTo(map)
       .bindPopup(`${completed.has(s.id) ? "✅" : "🎯"} ${s.name}`);
+
     marker.on("click", () => openDetail(s));
     markers.set(s.id, marker);
-    document.querySelectorAll(".bottomNav button").forEach(btn => {
-  btn.onclick = () => setTab(btn.dataset.tab);
   });
 
+  // ✅ TAB WIRING GOES HERE (once)
+  document.querySelectorAll(".bottomNav button").forEach(btn => {
+    btn.onclick = () => setTab(btn.dataset.tab);
+  });
+
+  // Optional: start on Map
+  setTab("Map");
+}
   fitRoute();
   renderProgress();
   renderList();
