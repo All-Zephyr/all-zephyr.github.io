@@ -184,3 +184,15 @@ button.ghost, a.link.ghost{background:rgba(255,255,255,.06)}
 .modalOpen .bottomNav{
   pointer-events:none;
 }
+
+.commitRef{
+  position:fixed;
+  left:50%;
+  bottom:6px;
+  transform:translateX(-50%);
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:.2px;
+  z-index:1001;
+  pointer-events:none;
+}

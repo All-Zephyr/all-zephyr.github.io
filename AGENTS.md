@@ -28,6 +28,7 @@ No automated tests are present. Validate changes manually:
 ## Commit & Pull Request Guidelines
 Recent commit history uses short, direct messages like `Update app.js` or `Update styles.css`. Follow this pattern unless a more descriptive message is needed.
 Commit most changes as you go to reduce the risk of losing work.
+After your normal commits, run `scripts/update-commit-ref.sh` to update the footer hash, commit it, and push.
 For PRs, include:
 - A concise summary of changes.
 - Screenshots or a short screen recording for UI changes.

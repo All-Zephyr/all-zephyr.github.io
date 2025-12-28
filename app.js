@@ -12,6 +12,7 @@ let currentStopForFeedId = null;
 
 const SUPABASE_URL = "https://exvhwgkhgogeiqhwlvxz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4dmh3Z2toZ29nZWlxaHdsdnh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MjE2MjgsImV4cCI6MjA4MjM5NzYyOH0.v9vDjrKQQRVX1d0rvku1G9O-xBeU4Veq_r72FyXaUPg";
+const COMMIT_REF = "f87fdd8";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 console.log("Supabase connected:", sb);
 
@@ -588,6 +589,11 @@ function setupInstallPrompt(){
   }
 }
 
+function setCommitRef(){
+  const el = document.getElementById("commitRef");
+  if (el) el.textContent = `Commit: ${COMMIT_REF}`;
+}
+
 function fitRoute(){
   const latlngs = stops.map(s => [s.lat, s.lon]);
   routeLine?.remove();
@@ -623,6 +629,7 @@ async function init(){
 
   initLive();
   setupInstallPrompt();
+  setCommitRef();
 
   // Optional: start on Map
   setTab("Map");
