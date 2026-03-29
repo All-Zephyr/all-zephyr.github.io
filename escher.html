@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Escher Recursion Tool</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script defer src="./escher-tool.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="title">
+      <div class="emoji">🌀</div>
+      <div>
+        <h1>Escher Recursion Tool</h1>
+        <p class="muted">Upload an image, click a focal point, and render in browser.</p>
+      </div>
+    </div>
+    <div class="actions">
+      <a href="./index.html" class="ghost link">← Back</a>
+    </div>
+  </header>
+
+  <main class="tabs">
+    <section class="tabPane active">
+      <div class="panel">
+        <div class="liveControls">
+          <input id="fileInput" type="file" accept="image/*" />
+          <button id="renderBtn" class="primary">Render</button>
+          <button id="downloadBtn" class="ghost">Download PNG</button>
+        </div>
+        <div class="escherControls">
+          <label>Center X <input id="centerX" type="number" step="1" /></label>
+          <label>Center Y <input id="centerY" type="number" step="1" /></label>
+          <label>Branch Dir <input id="branchDir" type="number" value="160" step="1" /></label>
+          <label>Zoom <input id="zoom" type="number" value="0.95" step="0.01" /></label>
+          <label>q <input id="qValue" type="number" value="22.5836845286" step="0.001" /></label>
+        </div>
+        <p class="muted small">Tip: click anywhere on the image to set center (e.g. laptop screen center).</p>
+      </div>
+
+      <div class="panel">
+        <canvas id="canvas" class="escherCanvas" width="900" height="900"></canvas>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
