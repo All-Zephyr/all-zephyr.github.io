@@ -8,6 +8,7 @@ const zoomInput = document.getElementById("zoom");
 const qValueInput = document.getElementById("qValue");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
+const statusMsg = document.getElementById("statusMsg");
 
 let sourceImageData = null;
 let sourceWidth = canvas.width;
@@ -49,6 +50,7 @@ function render(){
     alert("Please upload an image first.");
     return;
   }
+  statusMsg.textContent = "Rendering… this can take 5-20 seconds.";
 
   const w = sourceWidth;
   const h = sourceHeight;
@@ -121,17 +123,22 @@ function render(){
   }
 
   ctx.putImageData(out, 0, 0);
+  statusMsg.textContent = "Done. Adjust values and click Render again if needed.";
 }
 
 function fitCanvasToImage(img){
-  sourceWidth = img.width;
-  sourceHeight = img.height;
+  const maxSide = 1200;
+  const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+  sourceWidth = Math.max(1, Math.round(img.width * scale));
+  sourceHeight = Math.max(1, Math.round(img.height * scale));
   canvas.width = sourceWidth;
   canvas.height = sourceHeight;
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, sourceWidth, sourceHeight);
   sourceImageData = ctx.getImageData(0, 0, sourceWidth, sourceHeight);
-  centerXInput.value = Math.floor(sourceWidth / 2);
-  centerYInput.value = Math.floor(sourceHeight / 2);
+  centerXInput.value = Math.floor(sourceWidth * 0.62);
+  centerYInput.value = Math.floor(sourceHeight * 0.67);
+  statusMsg.textContent = "Image loaded. Rendering a first pass…";
+  setTimeout(() => render(), 20);
 }
 
 fileInput.addEventListener("change", (event) => {
